@@ -119,6 +119,26 @@ export const skillSources = {
     request<{ message: string }>("/api/v1/skill-sources/sync", { method: "POST" }),
 };
 
+// Schedules
+export const schedules = {
+  list: () => request<{ schedules: Schedule[] }>("/api/v1/schedules"),
+  get: (id: string) => request<Schedule>(`/api/v1/schedules/${id}`),
+  create: (data: CreateScheduleRequest) =>
+    request<Schedule>("/api/v1/schedules", { method: "POST", body: JSON.stringify(data) }),
+  update: (id: string, data: Partial<CreateScheduleRequest>) =>
+    request<Schedule>(`/api/v1/schedules/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  delete: (id: string) =>
+    request<{ status: string }>(`/api/v1/schedules/${id}`, { method: "DELETE" }),
+  enable: (id: string) =>
+    request<{ status: string }>(`/api/v1/schedules/${id}/enable`, { method: "POST" }),
+  disable: (id: string) =>
+    request<{ status: string }>(`/api/v1/schedules/${id}/disable`, { method: "POST" }),
+  trigger: (id: string) =>
+    request<{ status: string; run_id: string }>(`/api/v1/schedules/${id}/trigger`, { method: "POST" }),
+  listByAgent: (agentId: string) =>
+    request<{ schedules: Schedule[] }>(`/api/v1/agents/${agentId}/schedules`),
+};
+
 // Models + Dashboard
 export const models = {
   list: (provider?: string) =>
@@ -164,4 +184,17 @@ export interface Skill { id: string; name: string; description: string; tier: st
 export interface CreateSkillRequest { name: string; description?: string; tier?: string; skill_md?: string; tags?: string; source_url?: string }
 export interface SkillSource { id: string; url: string; label: string; is_default: boolean; status: string; skill_count: number; error_msg?: string; last_synced?: string; created_at: string }
 export interface Model { id: string; provider: string; display_name: string; context_window: number; input_cost_per_1m: number; output_cost_per_1m: number; supports_tools: boolean; is_reasoning: boolean }
+export interface Schedule {
+  id: string; user_id: string; agent_id: string; name: string; description?: string;
+  schedule_type: "cron" | "every" | "once"; cron_expr?: string; interval_seconds?: number;
+  timezone: string; mission?: string; enabled: boolean; overlap_policy: string;
+  max_retries: number; next_run_at?: string; last_run_at?: string;
+  last_run_status?: string; last_run_id?: string; last_error?: string;
+  consecutive_errors: number; created_at: string; updated_at: string;
+}
+export interface CreateScheduleRequest {
+  agent_id: string; name: string; description?: string;
+  schedule_type: "cron" | "every" | "once"; cron_expr?: string; interval_seconds?: number;
+  timezone?: string; mission?: string; enabled?: boolean; overlap_policy?: string; max_retries?: number;
+}
 export interface DashboardData { agents: number; total_runs: number; succeeded: number; failed: number; running: number; recent_runs: Run[] }

@@ -13,6 +13,7 @@ import { RunsPage } from "./pages/runs";
 import { RunDetailPage } from "./pages/run-detail";
 import { SkillsPage } from "./pages/skills";
 import { ApiKeysPage } from "./pages/api-keys";
+import { SchedulesPage } from "./pages/schedules";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -55,6 +56,7 @@ export default function App() {
                 <Route path="/runs" element={<RunsPage />} />
                 <Route path="/runs/:id" element={<RunDetailPage />} />
                 <Route path="/skills" element={<SkillsPage />} />
+                <Route path="/schedules" element={<SchedulesPage />} />
                 <Route path="/settings/api-keys" element={<ApiKeysPage />} />
               </Routes>
             </AppLayout>

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Bot, Play, Puzzle, Key, LogOut } from "lucide-react";
+import { LayoutDashboard, Bot, Play, Puzzle, Key, LogOut, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/store";
 
@@ -8,6 +8,7 @@ const links = [
   { to: "/agents", label: "Agents", icon: Bot },
   { to: "/runs", label: "Runs", icon: Play },
   { to: "/skills", label: "Skills", icon: Puzzle },
+  { to: "/schedules", label: "Schedules", icon: Calendar },
   { to: "/settings/api-keys", label: "API Keys", icon: Key },
 ];
 
