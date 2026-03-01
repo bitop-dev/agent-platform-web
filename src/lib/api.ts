@@ -106,6 +106,19 @@ export const skills = {
     request<Skill>("/api/v1/skills", { method: "POST", body: JSON.stringify(data) }),
 };
 
+// Skill Sources
+export const skillSources = {
+  list: () => request<{ skill_sources: SkillSource[] }>("/api/v1/skill-sources"),
+  create: (url: string, label: string) =>
+    request<SkillSource>("/api/v1/skill-sources", { method: "POST", body: JSON.stringify({ url, label }) }),
+  delete: (id: string) =>
+    request<void>(`/api/v1/skill-sources/${id}`, { method: "DELETE" }),
+  sync: (id: string) =>
+    request<{ message: string }>(`/api/v1/skill-sources/${id}/sync`, { method: "POST" }),
+  syncAll: () =>
+    request<{ message: string }>("/api/v1/skill-sources/sync", { method: "POST" }),
+};
+
 // Models + Dashboard
 export const models = {
   list: (provider?: string) =>
@@ -149,5 +162,6 @@ export interface ApiKey { id: string; provider: string; label: string; key_hint:
 export interface CreateApiKeyRequest { provider: string; label: string; key: string; is_default: boolean; base_url?: string }
 export interface Skill { id: string; name: string; description: string; tier: string; version: string; skill_md: string; tags: string; source_url: string; enabled: boolean; created_at: string }
 export interface CreateSkillRequest { name: string; description?: string; tier?: string; skill_md?: string; tags?: string; source_url?: string }
+export interface SkillSource { id: string; url: string; label: string; is_default: boolean; status: string; skill_count: number; error_msg?: string; last_synced?: string; created_at: string }
 export interface Model { id: string; provider: string; display_name: string; context_window: number; input_cost_per_1m: number; output_cost_per_1m: number; supports_tools: boolean; is_reasoning: boolean }
 export interface DashboardData { agents: number; total_runs: number; succeeded: number; failed: number; running: number; recent_runs: Run[] }
