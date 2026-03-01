@@ -93,11 +93,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           {/* User */}
           <div className="flex items-center justify-between px-3 py-1">
             <div className="flex items-center gap-2 min-w-0">
-              <div className="h-6 w-6 rounded bg-primary/10 border border-primary/20 flex items-center justify-center">
-                <span className="font-mono text-[10px] text-primary font-bold">
-                  {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "?"}
-                </span>
-              </div>
+              {(user as any)?.avatar_url ? (
+                <img src={(user as any).avatar_url} alt="" className="h-6 w-6 rounded border border-primary/20" />
+              ) : (
+                <div className="h-6 w-6 rounded bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <span className="font-mono text-[10px] text-primary font-bold">
+                    {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "?"}
+                  </span>
+                </div>
+              )}
               <span className="text-xs text-muted-foreground truncate font-mono">
                 {user?.email}
               </span>

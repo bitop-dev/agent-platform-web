@@ -76,6 +76,14 @@ export const agents = {
     request<Agent>(`/api/v1/agents/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   delete: (id: string) =>
     request<{ status: string }>(`/api/v1/agents/${id}`, { method: "DELETE" }),
+  setTeam: (id: string, teamId: string) =>
+    request<{ status: string }>(`/api/v1/agents/${id}/team`, { method: "PUT", body: JSON.stringify({ team_id: teamId }) }),
+};
+
+// Teams
+export interface Team { id: string; name: string; created_at: string }
+export const teams = {
+  list: () => request<{ teams: Team[] }>("/api/v1/teams"),
 };
 
 // Runs
@@ -172,7 +180,7 @@ export function connectRunStream(runId: string, onEvent: (e: RunEvent) => void, 
 }
 
 // Types
-export interface User { id: string; email: string; name: string; created_at: string }
+export interface User { id: string; email: string; name: string; avatar_url?: string; oauth_provider?: string; created_at: string }
 export interface Agent {
   id: string; user_id: string; name: string; description?: string; system_prompt: string;
   model_provider: string; model_name: string; config_yaml: string;

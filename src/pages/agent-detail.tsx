@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { agents, runs as runsApi } from "@/lib/api";
+import { agents, runs as runsApi, teams as teamsApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Play, Settings, ArrowLeft } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Play, Settings, ArrowLeft, Users } from "lucide-react";
 import { toast } from "sonner";
 
 export function AgentDetailPage() {
@@ -17,7 +18,14 @@ export function AgentDetailPage() {
   const [mission, setMission] = useState("");
 
   const { data: agent, isLoading } = useQuery({ queryKey: ["agent", id], queryFn: () => agents.get(id!) });
+  const { data: teamData } = useQuery({ queryKey: ["teams"], queryFn: teamsApi.list });
   const { data: runData } = useQuery({ queryKey: ["runs"], queryFn: runsApi.list });
+
+  const setTeamMut = useMutation({
+    mutationFn: (teamId: string) => agents.setTeam(id!, teamId),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["agent", id] }); toast.success("Team updated"); },
+    onError: (err: Error) => toast.error(err.message),
+  });
   const agentRuns = runData?.runs?.filter((r) => r.agent_id === id)?.slice(0, 10) ?? [];
 
   const triggerMut = useMutation({
@@ -56,6 +64,23 @@ export function AgentDetailPage() {
           <div className="flex justify-between"><span className="text-muted-foreground">Provider</span><span>{agent.model_provider}</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Max Turns</span><span>{agent.max_turns}</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Timeout</span><span>{agent.timeout_seconds}s</span></div>
+          {teamData?.teams && teamData.teams.length > 0 && (
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /> Team</span>
+              <Select
+                value={(agent as any).team_id || "none"}
+                onValueChange={(v) => setTeamMut.mutate(v === "none" ? "" : v)}
+              >
+                <SelectTrigger className="w-[140px] h-7 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No team</SelectItem>
+                  {teamData.teams.map((t: any) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </CardContent></Card>
         <Card><CardHeader><CardTitle>System Prompt</CardTitle></CardHeader><CardContent>
           <pre className="text-sm whitespace-pre-wrap text-muted-foreground bg-muted p-3 rounded-md max-h-48 overflow-auto">{agent.system_prompt}</pre>
