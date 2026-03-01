@@ -158,6 +158,25 @@ export const models = {
 };
 export const dashboard = { get: () => request<DashboardData>("/api/v1/dashboard") };
 
+// Credentials (skill secrets)
+export interface Credential {
+  id: string; name: string; value_hint: string; skill_name: string;
+  description: string; created_at: string; updated_at: string;
+}
+export const credentials = {
+  list: () => request<{ credentials: Credential[] }>("/api/v1/credentials"),
+  create: (data: { name: string; value: string; skill_name?: string; description?: string }) =>
+    request<{ credential: Credential }>("/api/v1/credentials", {
+      method: "POST", body: JSON.stringify(data),
+    }),
+  update: (id: string, data: { value?: string; description?: string }) =>
+    request<{ status: string }>(`/api/v1/credentials/${id}`, {
+      method: "PUT", body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    request<{ status: string }>(`/api/v1/credentials/${id}`, { method: "DELETE" }),
+};
+
 // Audit log
 export interface AuditEntry {
   id: number; user_id: string; action: string; resource_id: string;
