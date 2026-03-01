@@ -34,15 +34,13 @@ export const useAuth = create<AuthState>((set) => ({
     localStorage.removeItem("token");
     localStorage.removeItem("refresh_token");
     set({ user: null, isAuthenticated: false });
+    window.location.href = "/login";
   },
 
   loadUser: async () => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) {
-        set({ isLoading: false });
-        return;
-      }
+      if (!token) { set({ isLoading: false }); return; }
       const user = await authApi.me();
       set({ user, isAuthenticated: true, isLoading: false });
     } catch {
