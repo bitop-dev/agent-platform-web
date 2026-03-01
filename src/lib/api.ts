@@ -1,4 +1,6 @@
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080";
+// When VITE_API_URL is empty (Docker), use relative URLs (nginx proxies /api → api:8080)
+// When set (dev), use the full URL (e.g. http://localhost:8080)
+const API_BASE = import.meta.env.VITE_API_URL || "";
 
 class ApiError extends Error {
   constructor(public status: number, message: string) {
