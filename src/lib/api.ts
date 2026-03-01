@@ -148,6 +148,18 @@ export const models = {
 };
 export const dashboard = { get: () => request<DashboardData>("/api/v1/dashboard") };
 
+// Audit log
+export interface AuditEntry {
+  id: number; user_id: string; action: string; resource_id: string;
+  metadata: string; ip_address: string; created_at: string;
+}
+export const auditLog = {
+  list: (page = 1, perPage = 50) =>
+    request<{ entries: AuditEntry[]; total: number; page: number; per_page: number }>(
+      `/api/v1/audit-log?page=${page}&per_page=${perPage}`
+    ),
+};
+
 // WebSocket
 export function connectRunStream(runId: string, onEvent: (e: RunEvent) => void, onClose?: () => void): WebSocket {
   const wsBase = API_BASE.replace(/^http/, "ws");

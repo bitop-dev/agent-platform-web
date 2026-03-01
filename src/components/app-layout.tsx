@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Bot, Play, Puzzle, Key, LogOut, Calendar,
-  Users, Activity, ChevronRight
+  Users, Activity, ChevronRight, Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/store";
@@ -22,6 +22,7 @@ const navSections = [
       { to: "/skills", label: "Skills", icon: Puzzle },
       { to: "/teams", label: "Teams", icon: Users },
       { to: "/settings/api-keys", label: "API Keys", icon: Key },
+      { to: "/audit-log", label: "Audit Log", icon: Shield },
     ],
   },
 ];
