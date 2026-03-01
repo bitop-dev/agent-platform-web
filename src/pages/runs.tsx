@@ -11,8 +11,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ChevronLeft, ChevronRight, Zap } from "lucide-react";
+import { ChevronLeft, ChevronRight, Zap, Clock, Hash, Play } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const statusColors: Record<string, string> = {
+  queued: "led-amber",
+  running: "led-blue led-pulse",
+  succeeded: "led-green",
+  failed: "led-red",
+  cancelled: "led-red",
+};
+
+const statusBadgeColors: Record<string, string> = {
+  queued: "border-amber-500/30 text-amber-400",
+  running: "border-blue-500/30 text-blue-400",
+  succeeded: "border-emerald-500/30 text-emerald-400",
+  failed: "border-red-500/30 text-red-400",
+  cancelled: "border-red-500/30 text-red-400",
+};
 
 export function RunsPage() {
   const [page, setPage] = useState(1);
@@ -47,11 +63,15 @@ export function RunsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Runs</h1>
         <div className="flex items-center gap-3">
-          {/* Status filter */}
+          <h1 className="font-mono text-2xl font-bold tracking-tight">Runs</h1>
+          <Badge variant="outline" className="font-mono text-[10px] tracking-wider">
+            {total} TOTAL
+          </Badge>
+        </div>
+        <div className="flex items-center gap-3">
           <Select value={status} onValueChange={(v) => { setStatus(v === "all" ? "" : v); setPage(1); }}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-[140px] font-mono text-xs h-8">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -63,9 +83,8 @@ export function RunsPage() {
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
-          {/* Agent filter */}
           <Select value={agentId} onValueChange={(v) => { setAgentId(v === "all" ? "" : v); setPage(1); }}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] font-mono text-xs h-8">
               <SelectValue placeholder="All agents" />
             </SelectTrigger>
             <SelectContent>
@@ -79,67 +98,83 @@ export function RunsPage() {
       </div>
 
       {isLoading ? (
-        <div className="h-64 bg-muted rounded animate-pulse" />
+        <div className="space-y-1">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-14 bg-card border border-border rounded animate-pulse" />
+          ))}
+        </div>
       ) : !items.length ? (
-        <p className="text-muted-foreground">No runs found.</p>
+        <div className="flex flex-col items-center gap-3 py-16 rounded border border-dashed border-border">
+          <Play className="h-8 w-8 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">No runs found.</p>
+        </div>
       ) : (
         <>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Mission</TableHead>
-                <TableHead>Model</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Turns</TableHead>
-                <TableHead>Tokens</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Created</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((run: any) => (
-                <TableRow key={run.id}>
-                  <TableCell>
-                    <Link to={`/runs/${run.id}`} className="text-primary hover:underline truncate max-w-xs block">
-                      {run.mission.length > 70 ? run.mission.slice(0, 70) + "…" : run.mission}
-                    </Link>
-                  </TableCell>
-                  <TableCell><Badge variant="outline">{run.model_name}</Badge></TableCell>
-                  <TableCell>
-                    <Badge variant={
-                      run.status === "succeeded" ? "default" :
-                      run.status === "failed" ? "destructive" : "outline"
-                    }>{run.status}</Badge>
-                  </TableCell>
-                  <TableCell>{run.total_turns || "—"}</TableCell>
-                  <TableCell>
-                    {(run.input_tokens || 0) + (run.output_tokens || 0) > 0 ? (
-                      <span className="flex items-center gap-1 text-xs">
-                        <Zap className="h-3 w-3" />
-                        {((run.input_tokens || 0) + (run.output_tokens || 0)).toLocaleString()}
-                      </span>
-                    ) : "—"}
-                  </TableCell>
-                  <TableCell>{run.duration_ms ? `${(run.duration_ms / 1000).toFixed(1)}s` : "—"}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {new Date(run.created_at).toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {/* Table header */}
+          <div className="data-table grid grid-cols-[1fr_100px_80px_70px_80px_80px_70px] gap-3 px-4 py-2 text-muted-foreground border-b border-border">
+            <th className="text-left">Mission</th>
+            <th className="text-left">Model</th>
+            <th className="text-left">Status</th>
+            <th className="text-right">Turns</th>
+            <th className="text-right">Tokens</th>
+            <th className="text-right">Duration</th>
+            <th className="text-right">Age</th>
+          </div>
+
+          {/* Rows */}
+          <div className="space-y-0.5">
+            {items.map((run: any) => {
+              const tokens = (run.input_tokens || 0) + (run.output_tokens || 0);
+              return (
+                <Link
+                  key={run.id}
+                  to={`/runs/${run.id}`}
+                  className="grid grid-cols-[1fr_100px_80px_70px_80px_80px_70px] gap-3 items-center px-4 py-2.5 rounded border border-transparent hover:border-border hover:bg-card/50 transition-all group"
+                >
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span className={cn("led shrink-0", statusColors[run.status] || "led-amber")} />
+                    <span className="text-sm truncate group-hover:text-primary transition-colors">
+                      {run.mission.length > 60 ? run.mission.slice(0, 60) + "…" : run.mission}
+                    </span>
+                  </span>
+                  <span className="font-mono text-[11px] text-muted-foreground">{run.model_name}</span>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "font-mono text-[9px] tracking-wider uppercase w-fit",
+                      statusBadgeColors[run.status]
+                    )}
+                  >
+                    {run.status}
+                  </Badge>
+                  <span className="font-mono text-[11px] text-muted-foreground text-right flex items-center justify-end gap-1">
+                    <Hash className="h-3 w-3" />{run.total_turns || "—"}
+                  </span>
+                  <span className="font-mono text-[11px] text-muted-foreground text-right flex items-center justify-end gap-1">
+                    {tokens > 0 ? <><Zap className="h-3 w-3" />{tokens.toLocaleString()}</> : "—"}
+                  </span>
+                  <span className="font-mono text-[11px] text-muted-foreground text-right flex items-center justify-end gap-1">
+                    {run.duration_ms ? <><Clock className="h-3 w-3" />{(run.duration_ms / 1000).toFixed(1)}s</> : "—"}
+                  </span>
+                  <span className="font-mono text-[10px] text-muted-foreground/60 text-right">
+                    {timeAgo(run.created_at)}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              {total} run{total !== 1 ? "s" : ""} · Page {page} of {totalPages}
+          <div className="flex items-center justify-between pt-2">
+            <p className="font-mono text-[11px] text-muted-foreground">
+              Page {page} of {totalPages} · {total} run{total !== 1 ? "s" : ""}
             </p>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-                <ChevronLeft className="h-4 w-4" />
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)} className="h-7 w-7 p-0">
+                <ChevronLeft className="h-3.5 w-3.5" />
               </Button>
-              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
-                <ChevronRight className="h-4 w-4" />
+              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="h-7 w-7 p-0">
+                <ChevronRight className="h-3.5 w-3.5" />
               </Button>
             </div>
           </div>
@@ -147,4 +182,14 @@ export function RunsPage() {
       )}
     </div>
   );
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "now";
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h`;
+  return `${Math.floor(hrs / 24)}d`;
 }
