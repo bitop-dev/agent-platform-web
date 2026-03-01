@@ -22,8 +22,18 @@ function buildTimeline(events: ParsedEvent[]): TimelineItem[] {
   const items: TimelineItem[] = [];
   let textCount = 0;
 
+  // Events to silently skip (they're noise in the timeline)
+  const skipTypes = new Set(["text_delta", "message_start", "message_end"]);
+
   for (const e of events) {
     const d = e.data || {};
+
+    // Skip text deltas and message boundaries — they're shown in the output pane
+    if (skipTypes.has(e.type)) {
+      if (e.type === "text_delta") textCount++;
+      continue;
+    }
+
     switch (e.type) {
       case "agent_start":
         items.push({ id: `s-${e.seq}`, type: "start", label: "Agent started", icon: <Play className="h-3 w-3 text-blue-400" />, color: "border-blue-500/30 bg-blue-500/5", expandable: false });
@@ -49,21 +59,39 @@ function buildTimeline(events: ParsedEvent[]): TimelineItem[] {
         items.push({ id: `te-${e.seq}`, type: "tool", label: `${isErr ? "✗" : "✓"} ${name}`, detail: isErr ? "error" : `${content.length} chars`, icon: isErr ? <XCircle className="h-3 w-3 text-red-400" /> : <CheckCircle className="h-3 w-3 text-green-400" />, color: isErr ? "border-red-500/30 bg-red-500/5" : "border-green-500/30 bg-green-500/5", expandable: !!content, content: content.length > 200 ? content.slice(0, 200) + "…" : content });
         break;
       }
-      case "text_delta": textCount++; break;
+      case "turn_start": {
+        const turn = d.Turn || d.turn || "";
+        items.push({ id: `tns-${e.seq}`, type: "status", label: `Turn ${turn} started`, icon: <MessageSquare className="h-3 w-3 text-blue-300" />, color: "border-blue-400/20 bg-blue-400/5", expandable: false });
+        break;
+      }
+      case "turn_end": {
+        const turn = d.Turn || d.turn || "";
+        items.push({ id: `tne-${e.seq}`, type: "status", label: `Turn ${turn} ended`, icon: <MessageSquare className="h-3 w-3 text-blue-300" />, color: "border-blue-400/20 bg-blue-400/5", expandable: false });
+        break;
+      }
+      case "deferred_action":
+        items.push({ id: `da-${e.seq}`, type: "status", label: "Deferred action detected", icon: <AlertCircle className="h-3 w-3 text-yellow-400" />, color: "border-yellow-500/30 bg-yellow-500/5", expandable: true, content: JSON.stringify(d, null, 2) });
+        break;
       case "error": {
         const msg = String(d.error || d.Error || d.message || d.raw || "Unknown error");
         items.push({ id: `err-${e.seq}`, type: "error", label: "Error", detail: msg.slice(0, 50), icon: <AlertCircle className="h-3 w-3 text-red-400" />, color: "border-red-500/30 bg-red-500/5", expandable: msg.length > 50, content: msg });
         break;
       }
       default:
-        items.push({ id: `${e.type}-${e.seq}`, type: "status", label: e.type, icon: <MessageSquare className="h-3 w-3 text-muted-foreground" />, color: "border-border bg-transparent", expandable: true, content: JSON.stringify(d, null, 2) });
+        // Unknown events — only show if they have meaningful data
+        if (d && Object.keys(d).length > 0 && !d.raw) {
+          items.push({ id: `${e.type}-${e.seq}`, type: "status", label: e.type, icon: <MessageSquare className="h-3 w-3 text-muted-foreground" />, color: "border-border bg-transparent", expandable: true, content: JSON.stringify(d, null, 2) });
+        }
     }
   }
+
+  // Add a single summary row for all streaming text
   if (textCount > 0) {
     const endIdx = items.findIndex((i) => i.type === "end");
     const textItem: TimelineItem = { id: "text-summary", type: "text", label: "Streaming output", detail: `${textCount} chunks`, icon: <MessageSquare className="h-3 w-3 text-purple-400" />, color: "border-purple-500/30 bg-purple-500/5", expandable: false };
     endIdx >= 0 ? items.splice(endIdx, 0, textItem) : items.push(textItem);
   }
+
   return items;
 }
 
@@ -100,7 +128,7 @@ export function RunDetailPage() {
     if (eventData?.events) {
       const parsed = eventData.events.map(parseEvent);
       setEvents(parsed);
-      const text = parsed.filter((e) => e.type === "text_delta").map((e) => String(e.data.delta || e.data.Delta || e.data.Text || "")).join("");
+      const text = parsed.filter((e) => e.type === "text_delta").map((e) => String(e.data.Text || e.data.text || e.data.delta || e.data.Delta || "")).join("");
       if (text) setStreamText(text);
     }
   }, [eventData]);
@@ -108,7 +136,7 @@ export function RunDetailPage() {
   const handleStreamEvent = useCallback((raw: RunEvent) => {
     const parsed = parseEvent(raw);
     setEvents((prev) => [...prev, parsed]);
-    if (parsed.type === "text_delta") setStreamText((prev) => prev + String(parsed.data.delta || parsed.data.Delta || parsed.data.Text || ""));
+    if (parsed.type === "text_delta") setStreamText((prev) => prev + String(parsed.data.Text || parsed.data.text || parsed.data.delta || parsed.data.Delta || ""));
     if (parsed.type === "agent_end" || parsed.type === "error") refetch();
   }, [refetch]);
 
