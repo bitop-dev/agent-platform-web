@@ -177,6 +177,42 @@ export const credentials = {
     request<{ status: string }>(`/api/v1/credentials/${id}`, { method: "DELETE" }),
 };
 
+// Workflows (AI Teams)
+export interface Workflow {
+  id: string; user_id: string; team_id?: string; name: string; description: string;
+  enabled: boolean; created_at: string; updated_at: string;
+}
+export interface WorkflowStep {
+  id: string; workflow_id: string; agent_id: string; agent_name?: string; name: string;
+  position: number; mission_template: string; depends_on: string; created_at: string;
+}
+export interface WorkflowRun {
+  id: string; workflow_id: string; user_id: string; status: string;
+  input_text: string; output_text?: string; error_message?: string;
+  created_at: string; started_at?: string; completed_at?: string;
+}
+export interface StepRun {
+  id: string; workflow_run_id: string; step_id: string; run_id?: string;
+  status: string; step_name: string; agent_id: string; depends_on: string;
+  started_at?: string; completed_at?: string;
+}
+export const workflows = {
+  list: () => request<{ workflows: Workflow[] }>("/api/v1/workflows"),
+  get: (id: string) => request<{ workflow: Workflow; steps: WorkflowStep[] }>(`/api/v1/workflows/${id}`),
+  create: (data: { name: string; description?: string; team_id?: string; steps: { agent_id: string; name: string; mission_template: string; depends_on?: string[] }[] }) =>
+    request<{ workflow: Workflow; steps: WorkflowStep[] }>("/api/v1/workflows", { method: "POST", body: JSON.stringify(data) }),
+  update: (id: string, data: { name: string; description: string; enabled: boolean }) =>
+    request<{ status: string }>(`/api/v1/workflows/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  delete: (id: string) =>
+    request<{ status: string }>(`/api/v1/workflows/${id}`, { method: "DELETE" }),
+  run: (id: string, input: string) =>
+    request<{ workflow_run: WorkflowRun }>(`/api/v1/workflows/${id}/run`, { method: "POST", body: JSON.stringify({ input }) }),
+  listRuns: (id: string) =>
+    request<{ workflow_runs: WorkflowRun[] }>(`/api/v1/workflows/${id}/runs`),
+  getRun: (runId: string) =>
+    request<{ workflow_run: WorkflowRun; step_runs: StepRun[] }>(`/api/v1/workflow-runs/${runId}`),
+};
+
 // Audit log
 export interface AuditEntry {
   id: number; user_id: string; action: string; resource_id: string;
