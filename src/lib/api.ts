@@ -89,6 +89,8 @@ export const runs = {
   events: (id: string) => request<{ events: RunEvent[] }>(`/api/v1/runs/${id}/events`),
   cancel: (id: string) =>
     request<{ status: string }>(`/api/v1/runs/${id}/cancel`, { method: "POST" }),
+  children: (id: string) =>
+    request<{ children: Run[] }>(`/api/v1/runs/${id}/children`),
 };
 
 // API Keys

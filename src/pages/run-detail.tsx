@@ -361,7 +361,56 @@ export function RunDetailPage() {
           <pre className="font-mono text-xs text-red-400 whitespace-pre-wrap">{run.error_message}</pre>
         </div>
       )}
+
+      {/* Child runs (orchestration tree) */}
+      <ChildRuns runId={id!} />
     </div>
+  );
+}
+
+function ChildRuns({ runId }: { runId: string }) {
+  const navigate = useNavigate();
+  const { data } = useQuery({
+    queryKey: ["run-children", runId],
+    queryFn: () => runsApi.children(runId),
+  });
+
+  const children = data?.children;
+  if (!children || children.length === 0) return null;
+
+  return (
+    <Card className="glow-border">
+      <CardHeader className="pb-2">
+        <CardTitle className="font-mono text-xs tracking-wider uppercase flex items-center gap-2">
+          <Bot className="h-3.5 w-3.5 text-muted-foreground" />
+          Sub-Agent Runs
+          <Badge variant="outline" className="font-mono text-[9px] ml-auto">{children.length}</Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {children.map((child) => (
+            <button
+              key={child.id}
+              onClick={() => navigate(`/runs/${child.id}`)}
+              className="flex items-center gap-3 w-full text-left px-3 py-2 rounded border border-border hover:bg-muted/30 transition-colors"
+            >
+              <span className={cn("led", ledMap[child.status])} />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium truncate">{child.mission}</p>
+                <p className="text-[10px] font-mono text-muted-foreground">
+                  {child.model_name} · {child.total_turns || 0} turns
+                  {child.duration_ms ? ` · ${(child.duration_ms / 1000).toFixed(1)}s` : ""}
+                </p>
+              </div>
+              <Badge variant="outline" className={cn("font-mono text-[9px] tracking-wider uppercase", statusBadge[child.status])}>
+                {child.status}
+              </Badge>
+            </button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
