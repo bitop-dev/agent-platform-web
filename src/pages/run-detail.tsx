@@ -56,6 +56,7 @@ interface TimelineStep {
   content?: string;         // Expanded detail text
   status?: "success" | "error" | "running" | "info";
   children?: TimelineStep[]; // Tool calls within a turn
+  callId?: string;          // ToolCallID for matching start→end
 }
 
 function buildTimeline(events: ParsedEvent[]): TimelineStep[] {
@@ -117,6 +118,7 @@ function buildTimeline(events: ParsedEvent[]): TimelineStep[] {
 
       case "tool_call_start": {
         const name = String(d.ToolName || d.tool_name || d.Name || d.name || "unknown");
+        const callId = String(d.ToolCallID || d.tool_call_id || d.id || "");
         let argsDisplay = "";
         const rawArgs = d.Arguments || d.arguments || d.args || "";
         if (rawArgs) {
@@ -142,6 +144,7 @@ function buildTimeline(events: ParsedEvent[]): TimelineStep[] {
           expandable: !!argsDisplay,
           content: argsDisplay ? `Arguments:\n${argsDisplay}` : undefined,
           status: "running",
+          callId,
         };
         if (currentTurn) {
           currentTurn.children = currentTurn.children || [];
@@ -154,14 +157,16 @@ function buildTimeline(events: ParsedEvent[]): TimelineStep[] {
 
       case "tool_call_end": {
         const name = String(d.ToolName || d.tool_name || d.Name || d.name || "unknown");
+        const callId = String(d.ToolCallID || d.tool_call_id || d.id || "");
         const output = String(d.Content || d.content || d.Output || d.output || "");
         const isErr = d.IsError === true || d.is_error === true;
         const truncOutput = output.length > 500 ? output.slice(0, 500) + "\n… (truncated)" : output;
 
-        // Try to find the matching start in current turn's children
+        // Match by ToolCallID first, fall back to name
         const container = currentTurn?.children || steps;
         const startIdx = [...container].reverse().findIndex(
-          (s) => s.type === "tool_call" && s.label === name && s.status === "running"
+          (s) => s.type === "tool_call" && s.status === "running" &&
+            (callId && s.callId ? s.callId === callId : s.label === name)
         );
         if (startIdx >= 0) {
           const idx = container.length - 1 - startIdx;
