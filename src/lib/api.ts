@@ -261,7 +261,7 @@ export interface Run {
 export interface RunEvent { id: number; run_id: string; seq: number; event_type: string; data: string; occurred_at: string }
 export interface ApiKey { id: string; provider: string; label: string; key_hint: string; is_default: boolean; base_url: string; created_at: string }
 export interface CreateApiKeyRequest { provider: string; label: string; key: string; is_default: boolean; base_url?: string }
-export interface Skill { id: string; name: string; description: string; tier: string; version: string; skill_md: string; tags: string; source_url: string; enabled: boolean; created_at: string }
+export interface Skill { id: string; name: string; description: string; tier: string; version: string; skill_md: string; tags: string; source_url: string; requires_env?: string; enabled: boolean; created_at: string }
 export interface CreateSkillRequest { name: string; description?: string; tier?: string; skill_md?: string; tags?: string; source_url?: string }
 export interface SkillSource { id: string; url: string; label: string; is_default: boolean; status: string; skill_count: number; error_msg?: string; last_synced?: string; created_at: string }
 export interface Model { id: string; provider: string; display_name: string; context_window: number; input_cost_per_1m: number; output_cost_per_1m: number; supports_tools: boolean; is_reasoning: boolean }
