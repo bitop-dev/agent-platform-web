@@ -106,6 +106,8 @@ export const apiKeys = {
   list: () => request<{ api_keys: ApiKey[] }>("/api/v1/api-keys"),
   create: (data: CreateApiKeyRequest) =>
     request<ApiKey>("/api/v1/api-keys", { method: "POST", body: JSON.stringify(data) }),
+  update: (id: string, data: Partial<CreateApiKeyRequest>) =>
+    request<{ status: string }>(`/api/v1/api-keys/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   delete: (id: string) =>
     request<{ status: string }>(`/api/v1/api-keys/${id}`, { method: "DELETE" }),
 };

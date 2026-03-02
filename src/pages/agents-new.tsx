@@ -167,7 +167,7 @@ export function NewAgentPage() {
               </div>
               <div className="space-y-2">
                 <Label>Model</Label>
-                <Select value={modelName} onValueChange={setModelName}>
+                <Select value={modelName} onValueChange={(v) => { if (v !== "__custom__") setModelName(v); else setModelName(""); }}>
                   <SelectTrigger><SelectValue placeholder="Select model" /></SelectTrigger>
                   <SelectContent>
                     {filtered.map((m) => (
@@ -175,9 +175,14 @@ export function NewAgentPage() {
                         {m.display_name} ({(m.context_window / 1000).toFixed(0)}K)
                       </SelectItem>
                     ))}
-                    {!filtered.length && <SelectItem value={modelName || "custom"}>Custom model</SelectItem>}
+                    <SelectItem value="__custom__">✏️ Custom model name...</SelectItem>
                   </SelectContent>
                 </Select>
+                {(!filtered.some(m => m.id === modelName) || modelName === "") && (
+                  <Input value={modelName} onChange={(e) => setModelName(e.target.value)}
+                    placeholder="e.g. gpt-4.1-mini, claude-sonnet-4-20250514, deepseek-chat"
+                    className="mt-2 font-mono text-sm" />
+                )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
