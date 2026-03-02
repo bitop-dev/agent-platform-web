@@ -2,7 +2,7 @@
 
 Web portal for the Agent Platform. Built with Bun + Vite + React + shadcn/ui + Tailwind CSS v4.
 
-> **Status**: Feature-complete. 36 source files, 14 pages, industrial "AgentOps Command Center" theme.
+> **Status**: Feature-complete. 38 source files, 16 pages, industrial "AgentOps Command Center" theme. CI/CD via GitHub Actions.
 
 ---
 
@@ -44,6 +44,8 @@ Requires the API server running at `http://localhost:8090` (configurable via `.e
 | `/teams` | Teams | Create teams, invite members, manage roles |
 | `/audit-log` | Audit Log | Color-coded action badges, paginated entries |
 | `/settings/api-keys` | API Keys | Add/delete provider keys with base URL support |
+| `/settings/credentials` | Credentials | Per-user skill secrets (GITHUB_TOKEN, etc.) with LED status |
+| `/workflows` | AI Teams | Multi-agent workflow builder, step dependencies, live run status |
 
 ---
 
