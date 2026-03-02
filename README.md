@@ -2,7 +2,7 @@
 
 Web portal for the Agent Platform. Built with Bun + Vite + React + shadcn/ui + Tailwind CSS v4.
 
-> **Status**: Feature-complete. 38 source files, 16 pages, industrial "AgentOps Command Center" theme. CI/CD via GitHub Actions.
+> **Status**: Feature-complete. 37 source files (~5.1K lines), 16 pages, industrial "AgentOps Command Center" theme. CI/CD via GitHub Actions.
 
 ---
 
