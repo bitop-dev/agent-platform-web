@@ -213,10 +213,10 @@ export default function CredentialsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="skill" className="text-xs font-mono">Scope to skill (optional)</Label>
-                <Select value={skillName} onValueChange={setSkillName}>
+                <Select value={skillName || "__all__"} onValueChange={(v) => setSkillName(v === "__all__" ? "" : v)}>
                   <SelectTrigger><SelectValue placeholder="All skills" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All skills</SelectItem>
+                    <SelectItem value="__all__">All skills</SelectItem>
                     {skillsNeedingCreds.map((s: Skill) => (
                       <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
                     ))}
